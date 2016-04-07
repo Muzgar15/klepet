@@ -16,6 +16,8 @@ Klepet.prototype.spremeniKanal = function(kanal) {
   });
 };
 
+
+
 Klepet.prototype.procesirajUkaz = function(ukaz) {
   var besede = ukaz.split(' ');
   ukaz = besede[0].substring(1, besede[0].length).toLowerCase();

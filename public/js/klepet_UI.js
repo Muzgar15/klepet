@@ -99,6 +99,14 @@ $(document).ready(function() {
     for (var i=0; i < uporabniki.length; i++) {
       $('#seznam-uporabnikov').append(divElementEnostavniTekst(uporabniki[i]));
     }
+    
+    $('#seznam-uporabnikov').click(function(event) {
+      var uporabnik = $(event.target).text();
+      var besedilo = '/zasebno "' + uporabnik + '"';
+      $('#poslji-sporocilo').val(besedilo);
+      $('#poslji-sporocilo').focus();
+});
+    
   });
 
   setInterval(function() {
@@ -131,3 +139,4 @@ function dodajSmeske(vhodnoBesedilo) {
   }
   return vhodnoBesedilo;
 }
+
