@@ -1,7 +1,8 @@
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
-  if (jeSmesko) {
-    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
+  var jeYouTube = sporocilo.indexOf('<iframe src=\'https://www.youtube.com/embed/') > -1;
+  if (jeSmesko||jeYouTube) {
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />').replace(/\&lt;iframe/gi, '<iframe').replace(/allowfullscreen\&gt;/gi, 'allowfullscreen>').replace(/\&lt;\/iframe&gt;/gi,'</iframe>');
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
@@ -15,6 +16,7 @@ function divElementHtmlTekst(sporocilo) {
 function procesirajVnosUporabnika(klepetApp, socket) {
   var sporocilo = $('#poslji-sporocilo').val();
   sporocilo = dodajSmeske(sporocilo);
+  sporocilo = dodajYouTube(sporocilo);
   var sistemskoSporocilo;
 
   if (sporocilo.charAt(0) == '/') {
@@ -128,6 +130,24 @@ function dodajSmeske(vhodnoBesedilo) {
     vhodnoBesedilo = vhodnoBesedilo.replace(smesko,
       "<img src='http://sandbox.lavbic.net/teaching/OIS/gradivo/" +
       preslikovalnaTabela[smesko] + "' />");
+  }
+  return vhodnoBesedilo;
+}
+
+function dodajYouTube(vhodnoBesedilo){
+  var povezave = [];
+  var povezaveHash = [];
+  var deliBesedila = vhodnoBesedilo.split(' ');
+  for(var i = 0; i < deliBesedila.length; i++){
+    if(deliBesedila[i].indexOf("https://www.youtube.com/watch?v=") > -1){
+      var temp = deliBesedila[i];
+      povezave.push(temp);
+      temp = temp.replace("https://www.youtube.com/watch?v=", '');
+      povezaveHash.push(temp);
+    }
+  }
+  for(var i = 0; i < povezave.length; i++){
+    vhodnoBesedilo = vhodnoBesedilo.replace(povezave[i], "<iframe src='https://www.youtube.com/embed/" + povezaveHash[i] + "' width='200' height='150' style='margin-left:20px' allowfullscreen></iframe>");
   }
   return vhodnoBesedilo;
 }
