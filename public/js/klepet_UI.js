@@ -1,7 +1,9 @@
+var jeSlika = false;
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
-  if (jeSmesko) {
-    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
+  var jeSlika = sporocilo.indexOf('<img') > -1;
+  if (jeSmesko||jeSlika) {
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace(/\&lt;img/gi, '<img').replace(/png\' \/\&gt;/gi, 'png\' />').replace(/px"\&gt;/gi, 'px">');
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
@@ -14,6 +16,7 @@ function divElementHtmlTekst(sporocilo) {
 
 function procesirajVnosUporabnika(klepetApp, socket) {
   var sporocilo = $('#poslji-sporocilo').val();
+  sporocilo = dodajSlike(sporocilo);
   sporocilo = dodajSmeske(sporocilo);
   var sistemskoSporocilo;
 
@@ -137,6 +140,36 @@ function dodajSmeske(vhodnoBesedilo) {
       "<img src='http://sandbox.lavbic.net/teaching/OIS/gradivo/" +
       preslikovalnaTabela[smesko] + "' />");
   }
+  return vhodnoBesedilo;
+}
+
+
+function dodajSlike(vhodnoBesedilo) {
+  var besede = vhodnoBesedilo.split(' ');
+  var povezave = [];
+  var indeksiPovezav = [];
+  for(var i = 0; i < besede.length; i++){
+    if(besede[i].match(/(https?:\/\/.*\.(?:png|jpg|gif))/gmi)&&besede[i].indexOf('lavbic') == -1){
+      povezave.push(besede[i]);
+      indeksiPovezav.push(i);
+    }
+  }
+  for(var i = 0; i < povezave.length; i++){
+    povezave[i] = '<img src="' + povezave[i] + '" width="200" style="margin-left:20px">';
+    besede[indeksiPovezav[i]] = povezave[i];
+  }
+  for(var i = 0; i < besede.length; i++){
+    if(i == 0&&besede.length!=1){
+      vhodnoBesedilo = besede[i] + ' ';
+    } else if(i == besede.length - 1 && besede.length!==1){
+      vhodnoBesedilo += besede[i];
+    } else if(i == besede.length - 1 && besede.length == 1){
+      vhodnoBesedilo = besede[i]
+    } else {
+      vhodnoBesedilo += besede[i];
+    }
+  }
+  
   return vhodnoBesedilo;
 }
 
