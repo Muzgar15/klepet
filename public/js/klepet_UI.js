@@ -2,8 +2,9 @@ var jeSlika = false;
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
   var jeSlika = sporocilo.indexOf('<img') > -1;
-  if (jeSmesko||jeSlika) {
-    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace(/\&lt;img/gi, '<img').replace(/png\' \/\&gt;/gi, 'png\' />').replace(/px"\&gt;/gi, 'px">');
+  var jeYouTube = sporocilo.indexOf('<iframe src=\'https://www.youtube.com/embed/') > -1;
+  if (jeSmesko||jeYouTube||jeSlika) {
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />').replace(/\&lt;iframe/gi, '<iframe').replace(/allowfullscreen\&gt;/gi, 'allowfullscreen>').replace(/\&lt;\/iframe&gt;/gi,'</iframe>').replace(/px"\&gt;/gi, 'px">');
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
@@ -18,6 +19,7 @@ function procesirajVnosUporabnika(klepetApp, socket) {
   var sporocilo = $('#poslji-sporocilo').val();
   sporocilo = dodajSlike(sporocilo);
   sporocilo = dodajSmeske(sporocilo);
+  sporocilo = dodajYouTube(sporocilo);
   var sistemskoSporocilo;
 
   if (sporocilo.charAt(0) == '/') {
@@ -170,6 +172,25 @@ function dodajSlike(vhodnoBesedilo) {
     }
   }
   
+  return vhodnoBesedilo;
+}
+
+
+function dodajYouTube(vhodnoBesedilo){
+  var povezave = [];
+  var povezaveHash = [];
+  var deliBesedila = vhodnoBesedilo.split(' ');
+  for(var i = 0; i < deliBesedila.length; i++){
+    if(deliBesedila[i].indexOf("https://www.youtube.com/watch?v=") > -1){
+      var temp = deliBesedila[i];
+      povezave.push(temp);
+      temp = temp.replace("https://www.youtube.com/watch?v=", '');
+      povezaveHash.push(temp);
+    }
+  }
+  for(var i = 0; i < povezave.length; i++){
+    vhodnoBesedilo = vhodnoBesedilo.replace(povezave[i], "<iframe src='https://www.youtube.com/embed/" + povezaveHash[i] + "' width='200' height='150' style='margin-left:20px' allowfullscreen></iframe>");
+  }
   return vhodnoBesedilo;
 }
 
