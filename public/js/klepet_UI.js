@@ -1,30 +1,9 @@
 var jeSlika = false;
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
-  
-  /*function preveriSliko(){
-    var besede = sporocilo.split(' ');
-    var slika = false;
-    for (var i = 0; i < besede.length; i++){
-      var zacetekHTTP = besede[i].substring(0,6).toLowerCase();
-      var zacetekHTTPS = besede[i].substring(0,7).toLowerCase();
-      var konec = besede[i].substring(besede[i].length - 4,besede[i].length - 1).toLowerCase();
-      if(((zacetekHTTP == 'http://') || (zacetekHTTPS == 'https://'))&&((konec=='jpg')||(konec=='png')||(konec=='gif'))){
-        slika = true;
-      }
-    }
-    return slika;
-  }
-  
-  var jeSlika = preveriSliko();*/
-  
-  if (jeSlika){
-    jeSlika = false;
-    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('px\' /&gt;', 'px\' />');
-    return $('<div style="font-weight: bold"></div>').html(sporocilo);
-  }
-  if (jeSmesko) {
-    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
+  var jeSlika = sporocilo.indexOf('<img') > -1;
+  if (jeSmesko||jeSlika) {
+    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace(/\&lt;img/gi, '<img').replace(/png\' \/\&gt;/gi, 'png\' />').replace(/px"\&gt;/gi, 'px">');
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
@@ -98,7 +77,6 @@ $(document).ready(function() {
   });
 
   socket.on('sporocilo', function (sporocilo) {
-    //sporocilo = dodajSlike(sporocilo.besedilo);
     var novElement = divElementEnostavniTekst(sporocilo.besedilo);
     $('#sporocila').append(novElement);
   });
@@ -157,59 +135,31 @@ function dodajSmeske(vhodnoBesedilo) {
   return vhodnoBesedilo;
 }
 
-function dodajSlike(besedilo) {
-  besede = besedilo.split(' ');
-  var linki = [];
-  for (var i = 0; i < besede.length; i++){
-    var zacetekHTTP = besede[i].substring(0,7).toLowerCase();
-    var zacetekHTTPS = besede[i].substring(0,8).toLowerCase();
-    var konec = besede[i].substring(besede[i].length - 4,besede[i].length).toLowerCase();
-    if(((zacetekHTTP == 'http://') || (zacetekHTTPS == 'https://'))&&((konec=='.jpg')||(konec=='.png')||(konec=='.gif'))){
-      linki.push(besede[i]);
-      jeSlika = true;
+function dodajSlike(vhodnoBesedilo) {
+  var besede = vhodnoBesedilo.split(' ');
+  var povezave = [];
+  var indeksiPovezav = [];
+  for(var i = 0; i < besede.length; i++){
+    if(besede[i].match(/(https?:\/\/.*\.(?:png|jpg|gif))/gmi)&&besede[i].indexOf('lavbic') == -1){
+      povezave.push(besede[i]);
+      indeksiPovezav.push(i);
+    }
+  }
+  for(var i = 0; i < povezave.length; i++){
+    povezave[i] = '<img src="' + povezave[i] + '" width="200" style="margin-left:20px">';
+    besede[indeksiPovezav[i]] = povezave[i];
+  }
+  for(var i = 0; i < besede.length; i++){
+    if(i == 0&&besede.length!=1){
+      vhodnoBesedilo = besede[i] + ' ';
+    } else if(i == besede.length - 1 && besede.length!==1){
+      vhodnoBesedilo += besede[i];
+    } else if(i == besede.length - 1 && besede.length == 1){
+      vhodnoBesedilo = besede[i]
+    } else {
+      vhodnoBesedilo += besede[i];
     }
   }
   
-  /*var zamenjane = [];
-  
-  for(var i = 0; i < linki.length; i++){
-    var temp = linki[i];
-    var podvojena = false;
-    for(var j = 0; j < zamenjane.length; j++){
-      if(temp==zamenjane[j]){
-        podvojena = true;
-      }
-    }
-    linki[i] = "<img src='" + linki[i] + "' width='200' style='margin-left:20px' />"
-    if(podvojena==true){
-      var indeks = besedilo.lastIndexOf(temp);
-      var besediloDva = besedilo.slice(indeks, besedilo.length);
-      besedilo = besedilo.substring(0, indeks);
-      var besediloTri = besediloDva.replace(temp, linki[i]);
-      var besedilo = besedilo.concat(besediloTri);
-    } else {
-      besedilo = besedilo.replace(temp, linki[i]);
-      zamenjane.push(temp);
-    }
-    }*/
-    function zamenjajZLinkom(beseda){
-      var link = "<img src='" + beseda + "' width='200' style='margin-left:20px' />"
-      beseda = beseda.replace(beseda, link);
-      return beseda;
-    }
-    for(var i = 0; i < besede.length; i++){
-      for(var j = 0; j < linki.length; j++){
-        if(besede[i]==linki[i]){
-          besede[i] = zamenjajZLinkom(besede[i]);
-        }
-      }
-    }
-    besedilo = '';
-    for(var i = 0; i < besede.length; i++){
-      besedilo += besede[i]
-      if(i!=besede.length-1){
-        besedilo+=' ';
-      }
-    }
-  return besedilo;
+  return vhodnoBesedilo;
 }
